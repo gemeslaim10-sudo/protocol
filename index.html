@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام مراجعة محتوى Art Vision</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Arial', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            /* Use a standard background color */
+            background-color: #f0f4f8;
+            /* Ensure the body fills the viewport height for better mobile scrolling */
+            min-height: 100vh;
+        }
+        /* Custom Spinner for RTL display */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-right-color: #ffffff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            vertical-align: middle;
+            margin-right: 8px; /* Margin for RTL */
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* Mobile specific styles for app-like feel */
+        @media (max-width: 640px) {
+            .app-container {
+                padding: 0;
+                border-radius: 0;
+                box-shadow: none;
+                border-top-width: 0;
+            }
+        }
+        /* Style for the fixed header bar on mobile */
+        .app-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+    </style>
+</head>
+<body class="flex justify-center items-start sm:p-8">
+
+<!-- Header Bar for App Feel -->
+<header class="app-header w-full max-w-3xl bg-blue-600 text-white p-4 shadow-lg sm:hidden">
+    <h1 class="text-xl font-bold text-center">نظام مراجعة المحتوى</h1>
+</header>
+
+
+<div class="w-full max-w-3xl bg-white shadow-2xl rounded-xl p-6 sm:p-10 border-t-8 border-blue-600 app-container">
+    <h1 class="text-2xl sm:text-3xl font-extrabold text-gray-900 text-center mb-8 sm:mt-0 mt-4 hidden sm:block">نظام مراجعة محتوى Art Vision</h1>
+    <p class="text-center text-gray-500 mb-6 mt-0">املأ الحقول لإنشاء برومبت المراجعة أو للحصول على محتوى مُحسّن من Gemini.</p>
+
+    <!-- منطقة التفعيل -->
+    <div id="activationArea" class="mb-6 p-4 border border-red-400 bg-red-50 rounded-lg shadow-inner">
+        <div class="flex items-center justify-between">
+            <label for="activationKeyInput" class="block text-sm font-medium text-red-700">⚠️ رمز التفعيل المشفر</label>
+            <button type="button" id="activationButton" class="px-3 py-1 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition duration-150">تفعيل</button>
+        </div>
+        <input type="password" id="activationKeyInput" value=""
+               class="w-full mt-2 px-4 py-2 border border-red-300 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 text-left"
+               placeholder="أدخل الرمز هنا...">
+        <p id="activationStatus" class="mt-2 text-sm text-red-700 font-medium">الرجاء إدخال الرمز لتفعيل بروتوكول المراجعة.</p>
+    </div>
+
+    <form id="reviewForm" class="space-y-6">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+                <label for="clientName" class="block text-sm font-medium text-gray-700 mb-1">اسم العميل <span class="text-red-500">*</span></label>
+                <input type="text" id="clientName" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+            </div>
+            <div>
+                <label for="geoScope" class="block text-sm font-medium text-gray-700 mb-1">النطاق الجغرافي <span class="text-red-500">*</span></label>
+                <!-- قيمة افتراضية: القاهرة - مصر -->
+                <input type="text" id="geoScope" required value="القاهرة - مصر" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150" placeholder="مثل: القاهرة - مصر">
+            </div>
+            <div>
+                <label for="services" class="block text-sm font-medium text-gray-700 mb-1">الخدمات/المنتجات <span class="text-red-500">*</span></label>
+                <input type="text" id="services" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+            </div>
+            <div>
+                <label for="targetClients" class="block text-sm font-medium text-gray-700 mb-1">العملاء المستهدفون <span class="text-red-500">*</span></label>
+                <input type="text" id="targetClients" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <!-- حقل لغة المحتوى (أصبح حقلاً نصياً الآن) -->
+            <div>
+                <label for="contentLanguage" class="block text-sm font-medium text-gray-700 mb-1">لغة المحتوى <span class="text-red-500">*</span></label>
+                <input type="text" id="contentLanguage" required 
+                       class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150"
+                       value="العربية (العامية المصرية)" 
+                       placeholder="مثال: العربية (العامية المصرية)">
+            </div>
+            
+            <!-- حقل المنصة المستهدفة -->
+            <div>
+                <label for="platform" class="block text-sm font-medium text-gray-700 mb-1">المنصة المستهدفة <span class="text-red-500">*</span></label>
+                <select id="platform" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 appearance-none bg-white">
+                    <option value="">اختر المنصة</option>
+                    <option value="Facebook">Facebook</option>
+                    <!-- تحديد القيمة الافتراضية "Instagram" عبر خاصية selected -->
+                    <option value="Instagram" selected>Instagram</option>
+                    <option value="TikTok">TikTok</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="YouTube">YouTube</option>
+                </select>
+            </div>
+
+            <!-- حقل تاريخ النشر (سيتم تعيين قيمته بواسطة JS) -->
+            <div>
+                <label for="publishDate" class="block text-sm font-medium text-gray-700 mb-1">تاريخ النشر <span class="text-red-500">*</span></label>
+                <input type="date" id="publishDate" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150">
+            </div>
+            <!-- تم حذف حقل Content ID -->
+        </div>
+
+        <!-- تم حذف حقل إدخال اللغة المخصص بالكامل -->
+        
+        <div>
+            <label for="contentType" class="block text-sm font-medium text-gray-700 mb-1">نوع المحتوى <span class="text-red-500">*</span></label>
+            <select id="contentType" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 appearance-none bg-white">
+                <option value="">اختر النوع</option>
+                <option value="نص">نص (كابشن/تغريدة)</option>
+                <option value="صورة">صورة (أو كاروسيل)</option>
+                <option value="فيديو">فيديو (بما في ذلك Shorts/Reels)</option>
+                <option value="رابط">رابط (لمقالة/صفحة هبوط)</option>
+            </select>
+        </div>
+
+        <div id="captionFieldContainer" class="hidden">
+            <label for="captionText" class="block text-sm font-medium text-gray-700 mb-1">Caption المقترح (نص الصورة/الفيديو) <span class="text-red-500">*</span></label>
+            <textarea id="captionText" rows="4" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 resize-y" placeholder="النص الكامل للكابشن/التغريدة..."></textarea>
+        </div>
+
+        <div>
+            <label for="contentDesc" class="block text-sm font-medium text-gray-700 mb-1" id="contentDescLabel">وصف المحتوى المرئي/السمعي أو الرابط <span class="text-red-500">*</span></label>
+            <textarea id="contentDesc" rows="5" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 resize-y" placeholder="أدخل وصف دقيق للمحتوى المرئي أو الرابط هنا..."></textarea>
+        </div>
+
+        <div>
+            <label for="notes" class="block text-sm font-medium text-gray-700 mb-1">ملاحظات إضافية (اختياري)</label>
+            <textarea id="notes" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 resize-y" placeholder="أي توجيهات خاصة للمراجع..."></textarea>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4 pt-4">
+            <!-- Increased py for better touch target -->
+            <button type="button" id="geminiReviewBtn" disabled class="w-full sm:w-2/3 bg-red-600 hover:bg-red-700 text-white font-bold py-4 rounded-xl shadow-lg transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-red-300">
+                <span id="geminiButtonText" class="flex items-center justify-center">✨ إنشاء المحتوى النهائي المُحسّن (Gemini)</span>
+            </button>
+
+            <button type="button" id="generatePrompt" disabled class="w-full sm:w-1/3 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl shadow-lg transition duration-300 ease-in-out disabled:bg-gray-400 disabled:cursor-not-allowed transform hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus:ring-4 focus:ring-blue-300 text-sm">
+                <span id="promptButtonText">إنشاء ونسخ البرومبت التقليدي</span>
+            </button>
+        </div>
+        
+        <!-- تم حذف زر إنشاء شخصية العميل (Persona) -->
+    </form>
+
+    <div id="outputContainer" class="hidden mt-8 mb-4">
+        <h2 id="outputTitle" class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">نتائج المعالجة:</h2>
+        <div id="output" class="bg-gray-50 p-4 border border-gray-200 rounded-lg text-sm text-gray-700 whitespace-pre-wrap overflow-x-auto"></div>
+        <button id="copyPrompt" class="mt-4 w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 rounded-lg shadow-md transition duration-300 ease-in-out focus:outline-none focus:ring-4 focus:ring-green-300 transform active:scale-[0.99]">نسخ المحتوى الناتج</button>
+        <div id="copyMessage" class="hidden mt-2 text-center text-sm font-medium text-green-700">تم النسخ بنجاح!</div>
+    </div>
+</div>
+
+<script>
+const form = document.getElementById('reviewForm');
+const generateBtn = document.getElementById('generatePrompt');
+const geminiReviewBtn = document.getElementById('geminiReviewBtn');
+const outputContainer = document.getElementById('outputContainer');
+const output = document.getElementById('output');
+const copyBtn = document.getElementById('copyPrompt');
+const copyMessage = document.getElementById('copyMessage');
+const promptButtonText = document.getElementById('promptButtonText');
+const geminiButtonText = document.getElementById('geminiButtonText');
+
+const activationKeyInput = document.getElementById('activationKeyInput');
+const activationButton = document.getElementById('activationButton');
+const activationStatus = document.getElementById('activationStatus');
+const activationArea = document.getElementById('activationArea');
+const SECRET_ACTIVATION_KEY = 'art start';
+let isActivated = false;
+
+const contentTypeSelect = document.getElementById('contentType');
+const contentDescLabel = document.getElementById('contentDescLabel');
+const captionFieldContainer = document.getElementById('captionFieldContainer');
+const captionText = document.getElementById('captionText');
+const contentLanguageInput = document.getElementById('contentLanguage'); // تغير لـ input
+
+
+// تم تعديل قاعدة الحقول الإجبارية لاستخدام contentLanguage كحقل إجباري عادي
+const baseRequiredFields = ['clientName','geoScope','services','targetClients','contentLanguage','platform','publishDate','contentType','contentDesc'];
+
+// --- Gemini API Configuration ---
+// مفتاح API الذي تم إدخاله من قبل المستخدم
+const apiKey = "AIzaSyATs1jekt5-HnGJGgI38I6nqnOzUXJgfmQ";
+const geminiApiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+
+// البروتوكول الجديد: التركيز على الإنشاء والكتابة النهائية للمحتوى/السكريبت
+const systemPrompt = "أنت كاتب محتوى إعلاني وتسويقي مبدع ومتخصص في صياغة الكابشنز، الشعارات، والسكريبتات القابلة للنشر فوراً، مع مراعاة دقيقة للغة واللهجة المحددة والنطاق الجغرافي والجمهور المستهدف والمنصة. مهمتك هي: 1. مراجعة النص/الوصف المُدخل. 2. تطبيق جميع التعديلات اللغوية والبيعية اللازمة. 3. دمج الكلمات المفتاحية الأكثر تداولاً أو بحثاً (SEO). 4. إنتاج النسخة النهائية والجذابة للمحتوى أو السكريبت المطلوب. يجب أن يكون الناتج هو **النسخة النهائية الجاهزة للنشر فقط**، دون أي تحليل أو تقييم إضافي، وبصيغة نصية مباشرة لا تضع جداول نهائيا في الاجابات";
+
+// --- Utility Functions ---
+
+/**
+ * Executes a fetch request with exponential backoff for resilience.
+ */
+async function fetchWithRetry(url, options, maxRetries = 5) {
+    let delay = 1000;
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            const response = await fetch(url, options);
+            if (response.status === 429 && i < maxRetries - 1) {
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2;
+                continue;
+            }
+            if (!response.ok) {
+                const errorBody = await response.text();
+                throw new Error(`API call failed with status ${response.status}: ${errorBody}`);
+            }
+            return response;
+        } catch (error) {
+            if (i === maxRetries - 1) throw error;
+            await new Promise(resolve => setTimeout(resolve, delay));
+            delay *= 2;
+        }
+    }
+}
+
+// دالة لتهيئة القيم الافتراضية
+function initializeDefaultValues() {
+    // تعيين تاريخ اليوم الحالي كقيمة افتراضية لتاريخ النشر
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months start at 0!
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayString = `${yyyy}-${mm}-${dd}`;
+    document.getElementById('publishDate').value = todayString;
+
+    // القيم الافتراضية الأخرى تم تعيينها في HTML
+    
+    checkFormValidity();
+}
+
+
+// يتم استدعاء تهيئة القيم عند تحميل الصفحة
+window.addEventListener('load', initializeDefaultValues);
+
+
+// --- Form and UI Logic ---
+
+function updateCaptionFieldVisibility() {
+    const selectedType = contentTypeSelect.value;
+    const needsCaption = ['نص','صورة','فيديو'].includes(selectedType);
+    const isLink = selectedType === 'رابط';
+
+    if(needsCaption){
+        captionFieldContainer.classList.remove('hidden');
+        captionText.required = true;
+        contentDescLabel.textContent = 'وصف المحتوى المرئي/السمعي (إذا وُجد)';
+        document.getElementById('contentDesc').required = false;
+    } else {
+        captionFieldContainer.classList.add('hidden');
+        captionText.required = false;
+        if(isLink) contentDescLabel.textContent = 'الرابط المستهدف للنشر (URL)';
+        else contentDescLabel.textContent = 'النص أو وصف المحتوى أو الرابط';
+        document.getElementById('contentDesc').required = true;
+    }
+}
+
+function checkFormValidity(){
+    const currentRequiredFields = [...baseRequiredFields];
+    
+    // إضافة حقل الكابشن شرطياً
+    if(!captionFieldContainer.classList.contains('hidden')) {
+        currentRequiredFields.push('captionText');
+    }
+    
+    // تم حذف منطق إضافة حقل اللغة المخصصة شرطياً
+
+    const allFilled = currentRequiredFields.every(id => {
+        const el = document.getElementById(id);
+        // التحقق من القيمة والاحتفاظ بالشرط المطلوب
+        return el && el.value.trim() !== '';
+    });
+    
+    const isReady = allFilled && isActivated;
+
+    generateBtn.disabled = !isReady;
+    geminiReviewBtn.disabled = !isReady;
+
+
+    const commonText = isActivated?'':' (البروتوكول غير مُفعَّل)';
+    
+    // Update main buttons status
+    promptButtonText.textContent = 'إنشاء ونسخ البرومبت التقليدي'+commonText;
+    if (isReady) {
+        // تم تغيير النص ليعكس وظيفة الإنشاء الجديدة
+        geminiButtonText.innerHTML = `✨ إنشاء المحتوى النهائي المُحسّن (Gemini)`;
+        promptButtonText.textContent = 'إنشاء ونسخ البرومبت التقليدي';
+    } else if (!isActivated) {
+        geminiButtonText.innerHTML = `✨ إنشاء المحتوى النهائي المُحسّن (Gemini)${commonText}`;
+    } else {
+        geminiButtonText.innerHTML = '✨ يرجى ملء جميع الحقول الإجبارية';
+        promptButtonText.textContent = 'يرجى ملء جميع الحقول الإجبارية';
+    }
+}
+
+form.addEventListener('input', checkFormValidity);
+contentTypeSelect.addEventListener('change',()=>{updateCaptionFieldVisibility(); checkFormValidity();});
+// تم حذف ربط دالة updateCustomLanguageField بالحدث
+
+activationButton.addEventListener('click', handleActivation);
+function handleActivation(){
+    const inputKey = activationKeyInput.value.trim();
+    if(inputKey === SECRET_ACTIVATION_KEY){
+        isActivated = true;
+        activationStatus.textContent = '✅ تم التفعيل بنجاح. يمكنك الآن البدء بمراجعة المحتوى.';
+        activationStatus.classList.remove('text-red-700'); activationStatus.classList.add('text-green-700');
+        activationKeyInput.disabled = true; activationButton.disabled = true; activationButton.textContent = 'مُفعَّل';
+        activationArea.classList.remove('border-red-400','bg-red-50'); activationArea.classList.add('border-green-400','bg-green-50');
+        checkFormValidity();
+    } else {
+        isActivated = false;
+        activationStatus.textContent = '❌ خطأ في الرمز! لا يمكن تفعيل البروتوكول. برجاء المحاولة مجدداً.';
+        activationStatus.classList.remove('text-green-700'); activationStatus.classList.add('text-red-700');
+        activationArea.classList.remove('border-green-400','bg-green-50'); activationArea.classList.add('border-red-400','bg-red-50');
+        checkFormValidity();
+    }
+}
+
+updateCaptionFieldVisibility();
+checkFormValidity();
+
+function getFormData(){
+    const selectedType = contentTypeSelect.value;
+    // التأكد من جلب النص الأساسي سواء كان كابشن أو وصف (حسب نوع المحتوى)
+    let contentMainText = '';
+    if (['نص', 'صورة', 'فيديو'].includes(selectedType)) {
+        contentMainText = captionText.value.trim();
+    } else if (selectedType === 'رابط') {
+        contentMainText = document.getElementById('contentDesc').value.trim(); // الرابط نفسه أو وصفه
+    } else {
+        contentMainText = document.getElementById('contentDesc').value.trim();
+    }
+    
+    // قراءة لغة المحتوى من حقل الإدخال النصي مباشرة
+    const contentLanguageValue = contentLanguageInput.value.trim();
+
+    const geoScopeValue = document.getElementById('geoScope').value.trim();
+
+    return {
+        clientName: document.getElementById('clientName').value.trim(),
+        geoScope: geoScopeValue,
+        // قراءة لغة المحتوى من الحقل النصي
+        contentLanguage: contentLanguageValue,
+        services: document.getElementById('services').value.trim(),
+        targetClients: document.getElementById('targetClients').value.trim(),
+        platform: document.getElementById('platform').value,
+        publishDate: document.getElementById('publishDate').value,
+        contentType: selectedType,
+        captionText: contentMainText, // نستخدم هذا ليكون النص الأساسي للبرومبت
+        contentDesc: document.getElementById('contentDesc').value.trim(),
+        notes: document.getElementById('notes').value.trim() || 'لا توجد ملاحظات إضافية.',
+        activationID: '••••••'
+    };
+}
+
+function constructPrompt(data){
+    let contentDetails='';
+    // استخدام data.captionText الذي يحتوي على النص الأساسي للمحتوى/الرابط
+    contentDetails+=`
+- النص/الكابشن/الرابط المُدخَل للمراجعة:
+---
+${data.captionText}
+---
+`;
+    // إذا كان هناك وصف إضافي (يظهر في حالة الصورة/الفيديو) نضعه بعده
+    if (['صورة', 'فيديو'].includes(data.contentType) && document.getElementById('contentDesc').value.trim() !== '') {
+         contentDetails+=`
+- وصف المحتوى المرئي/السمعي الإضافي:
+---
+${document.getElementById('contentDesc').value.trim()}
+---
+`;
+    }
+    
+    // محتوى البرومبت الكلاسيكي (تم تبسيط قسم المخرجات)
+    return `
+[Art Vision Content Review Protocol]
+
+**مراجعة وتطوير محتوى Art Vision**
+
+**أولاً: معلومات المشروع:**
+- Client Name: ${data.clientName}
+- النطاق الجغرافي: ${data.geoScope}
+- لغة المحتوى المقترحة: ${data.contentLanguage}
+- الخدمات/المنتجات: ${data.services}
+- العملاء المستهدفون: ${data.targetClients}
+- المنصة المستهدفة: ${data.platform}
+- تاريخ النشر المستهدف: ${data.publishDate}
+
+**ثانياً: تفاصيل المحتوى:**
+- نوع المحتوى: ${data.contentType}
+${contentDetails}
+- ملاحظات إضافية: ${data.notes}
+
+**ثالثاً: المخرجات المطلوبة (التحسين الاحترافي لدرجة الجنون):**
+1.  **تحليل وبحث متعمق (Search & Analysis):**
+    * قم بإجراء بحث شامل باستخدام أداة Google Search المتاحة لديك لتحديد **أقوى الكلمات المفتاحية النشطة والأكثر بحثًا (SEO)** و **الهاشتاجات الأكثر تداولاً** المتعلقة بـ "${data.services}" و "العملاء المستهدفون: ${data.targetClients}" في "النطاق الجغرافي: ${data.geoScope}" وعلى "المنصة: ${data.platform}".
+2.  **الصياغة النهائية:**
+    * بناء النسخة النهائية من المحتوى (كابشن أو سكريبت) استناداً إلى النص المُدخَل أعلاه، مع دمج نتائج البحث الاحترافية (الكلمات المفتاحية والهاشتاجات النشطة).
+    * تطبيق جميع البروتوكولات البيعية والتسويقية واللغوية بمهارة فائقة.
+3.  **التنسيق:**
+    * **الرجاء تقديم النص النهائي الجاهز للنشر فقط،** دون أي تحليل أو تقييم.
+    * **مهم جداً:** يجب أن يكون النص الناتج خالياً تماماً من أي رموز تنسيق إضافية مثل النجمة (\*)، أو الشرط المائلة للأمام (\/)، أو الشرط السفلية (\_)، أو أي رمز "مريب" قد يحيط بالكلمات، لتكون النسخة صالحة للنسخ واللصق مباشرة.
+    * يجب أن يتم وضع أفضل 5-8 هاشتاجات تم العثور عليها في نهاية النص.
+
+**ملحوظة:** ضع في اعتبارك اللغة واللهجة والجمهور المستهدف والنطاق الجغرافي والكلمات الأكثر بحثًا والتداول.`;
+}
+
+
+async function callGemini(userQuery, systemInstruction, outputTitle) {
+    // Check if API key is present before calling fetchWithRetry
+    if (apiKey === "") {
+        outputContainer.classList.remove('hidden');
+        output.textContent = '❌ خطأ: مفتاح Gemini API غير مُضاف. يرجى إضافته في متغير apiKey في الإسكربت.';
+        document.getElementById('outputTitle').textContent = 'خطأ في التهيئة';
+        checkFormValidity();
+        return;
+    }
+    
+    const data = getFormData();
+    
+    outputContainer.classList.remove('hidden');
+    document.getElementById('outputTitle').textContent = outputTitle;
+    output.innerHTML = `<div class="text-center p-8 text-red-600 font-bold">
+        <span class="spinner"></span>
+        <span class="mr-2">جاري إنشاء المحتوى بواسطة Gemini...</span>
+    </div>`;
+    
+    geminiReviewBtn.disabled = true;
+    generateBtn.disabled = true;
+    
+    const originalGeminiText = geminiButtonText.innerHTML;
+    
+    geminiButtonText.innerHTML = `<span class="spinner"></span> جاري العمل...`;
+
+    try {
+        const payload = {
+            contents: [{ parts: [{ text: userQuery }] }],
+            // Enable Google Search for real-time data on trends, SEO, etc.
+            tools: [{ "google_search": {} }], 
+            systemInstruction: {
+                parts: [{ text: systemInstruction }]
+            },
+        };
+
+        const response = await fetchWithRetry(geminiApiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+        const candidate = result.candidates?.[0];
+
+        if (candidate && candidate.content?.parts?.[0]?.text) {
+            const text = candidate.content.parts[0].text;
+            let sources = [];
+            
+            const groundingMetadata = candidate.groundingMetadata;
+            if (groundingMetadata && groundingMetadata.groundingAttributions) {
+                sources = groundingMetadata.groundingAttributions
+                    .map(attribution => ({
+                        uri: attribution.web?.uri,
+                        title: attribution.web?.title,
+                    }))
+                    .filter(source => source.uri && source.title);
+            }
+
+            // Display generated text
+            output.textContent = text;
+            
+
+            // Add sources if available
+            if (sources.length > 0) {
+                let sourcesText = '\n\n---\n## مصادر المعلومات (للتدقيق):\n';
+                sources.forEach((source, index) => {
+                    sourcesText += `\n- [${source.title || 'Source'}](${source.uri})`;
+                });
+                output.textContent += sourcesText;
+            }
+
+        } else {
+            output.textContent = '❌ عذراً، لم يتمكن Gemini من إنهاء طلبك. قد تكون المشكلة في تنسيق الإدخال أو عدم توفر بيانات.';
+            document.getElementById('outputTitle').textContent = 'خطأ في المعالجة';
+        }
+    } catch (error) {
+        console.error("Gemini API Error:", error);
+        output.textContent = `❌ حدث خطأ غير متوقع أثناء الاتصال بخدمة Gemini. الرجاء التحقق من اتصالك وإعادة المحاولة. \n\nالتفاصيل: ${error.message}`;
+        document.getElementById('outputTitle').textContent = 'خطأ في النظام';
+    } finally {
+        geminiButtonText.innerHTML = originalGeminiText;
+        checkFormValidity(); // Restore buttons to correct state
+    }
+}
+
+// --- Event Handlers ---
+
+generateBtn.addEventListener('click',()=>{
+    const data = getFormData();
+    const promptText = constructPrompt(data);
+    outputContainer.classList.remove('hidden');
+    output.textContent = promptText;
+    document.getElementById('outputTitle').textContent = 'البرومبت التقليدي الجاهز للنسخ:';
+});
+
+geminiReviewBtn.addEventListener('click', async ()=>{
+    if (!isActivated || geminiReviewBtn.disabled) return;
+    const data = getFormData();
+    const userQuery = constructPrompt(data);
+    callGemini(userQuery, systemPrompt, 'النسخة النهائية للمحتوى (Gemini)');
+});
+
+
+copyBtn.addEventListener('click',()=>{
+    // Use execCommand for better iframe compatibility
+    try {
+        const textarea = document.createElement('textarea');
+        textarea.value = output.textContent;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        copyMessage.classList.remove('hidden');
+        setTimeout(()=>copyMessage.classList.add('hidden'),2500);
+    } catch (err) {
+        console.error('Could not copy text: ', err);
+        // Fallback for environments where execCommand is restricted
+        copyMessage.textContent = 'فشل النسخ. الرجاء النسخ يدوياً.';
+        copyMessage.classList.remove('hidden');
+        setTimeout(()=>copyMessage.classList.add('hidden'), 3500);
+    }
+});
+</script>
+
+</body>
+</html>
