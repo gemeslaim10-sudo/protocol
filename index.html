@@ -17,12 +17,21 @@
         }
     </script>
     <style>
+        /* إضافة box-sizing: border-box; عالمياً لضمان التجاوب الصحيح */
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
         /* 1. الخلفية الأساسية - أسود داكن */
         body {
             background-color: #1a1a1a; /* Dark background for the app feel */
             min-height: 100vh;
-            /* إضافة هذه الخاصية لمنع شريط التمرير الأفقي غير المرغوب فيه */
-            overflow-x: hidden; 
+        }
+        
+        /* New: Body Padding to account for the fixed top nav */
+        /* يتم إضافة مساحة علوية لتجنب اختباء المحتوى خلف شريط التنقل الثابت */
+        .fixed-nav-padding {
+            padding-top: 5rem; /* 80px to safely clear the fixed header on all devices */
         }
         
         /* 2. الألوان الأساسية للنصوص على المستوى العام */
@@ -52,13 +61,14 @@
                 box-shadow: none;
                 border-top-width: 0;
             }
-        }
-        /* Style for the fixed header bar on mobile */
-        .app-header {
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            background-color: #1f2937; /* Darker header */
+            /* تصغير حجم حقول الإدخال والخطوط عليها لتكون أكثر تكثيفًا على الموبايل */
+            .input-dark-theme {
+                padding: 0.6rem 0.75rem; /* py-2.5 px-3 بدلاً من py-3 px-4 */
+                font-size: 0.875rem; /* text-sm */
+            }
+            .grid > div > label {
+                font-size: 0.75rem; /* text-xs */
+            }
         }
 
         /* 3. تنسيق حقول الإدخال لتكون داكنة مع نصوص فاتحة */
@@ -66,6 +76,7 @@
             background-color: #2c2c2c;
             border-color: #4a4a4a;
             color: #ffffff;
+            padding: 0.75rem 1rem; /* Default py-3 px-4 */
         }
         .input-dark-theme::placeholder {
             color: #9ca3af; /* Placeholder color */
@@ -82,20 +93,23 @@
         }
     </style>
 </head>
-<body class="flex justify-center items-start sm:p-8">
+<!-- تم إضافة fixed-nav-padding لتجنب اختباء المحتوى تحت الشريط الثابت -->
+<body class="flex justify-center items-start fixed-nav-padding"> 
 
-<!-- Header Bar for App Feel -->
-<header class="app-header w-full max-w-3xl bg-blue-600 text-white p-4 shadow-lg sm:hidden">
-    <!-- العنوان باللون الأحمر -->
-    <h1 class="text-xl font-bold text-red-500 text-center">نظام مراجعة المحتوى</h1>
-</header>
+<!-- New Unified FIXED Top Navigation Bar -->
+<nav class="fixed top-0 left-0 right-0 z-50 bg-gray-900 border-b-4 border-red-600 shadow-xl">
+    <div class="max-w-3xl mx-auto w-full flex justify-center items-center px-4 py-4 sm:py-3">
+        <!-- Title/Logo text, smaller on mobile (text-lg), larger on desktop (sm:text-xl) -->
+        <h1 class="text-lg sm:text-xl font-extrabold text-red-500 whitespace-nowrap">
+            نظام مراجعة محتوى Art Vision
+        </h1>
+    </div>
+</nav>
 
 
-<!-- تغيير الخلفية والحواف إلى الداكن -->
-<!-- تقليل padding الافتراضي لـ p-6 إلى p-4 على الشاشات الصغيرة لزيادة المساحة المتاحة -->
-<div class="w-full max-w-3xl bg-gray-800 shadow-2xl rounded-xl p-4 sm:p-10 border-t-8 border-red-500 app-container">
-    <!-- العنوان باللون الأحمر -->
-    <h1 class="text-2xl sm:text-3xl font-extrabold text-red-500 text-center mb-8 sm:mt-0 mt-4 hidden sm:block">نظام مراجعة محتوى Art Vision</h1>
+<!-- Main Content Container -->
+<!-- تم إزالة العنوان الكبير الذي كان هنا ليصبح العنوان في الشريط الثابت -->
+<div class="w-full max-w-3xl bg-gray-800 shadow-2xl rounded-xl px-4 py-8 sm:p-10 border-t-8 border-red-500 app-container">
     <!-- النص باللون الأبيض/الفاتح -->
     <p class="text-center text-gray-300 mb-6 mt-0">املأ الحقول لإنشاء برومبت المراجعة أو للحصول على محتوى مُحسّن من Gemini.</p>
 
@@ -116,22 +130,22 @@
     <form id="reviewForm" class="space-y-6">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-                <!-- النص باللون الأبيض/الفاتح -->
+                <!-- تم تصغير حجم الخط على الموبايل عبر تعديل الـ CSS -->
                 <label for="clientName" class="block text-sm font-medium text-gray-200 mb-1">اسم العميل <span class="text-red-500">*</span></label>
-                <!-- تطبيق تنسيق الحقل الداكن -->
-                <input type="text" id="clientName" required class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 input-dark-theme">
+                <!-- تطبيق تنسيق الحقل الداكن مع التجاوب -->
+                <input type="text" id="clientName" required class="w-full border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 input-dark-theme">
             </div>
             <div>
                 <label for="geoScope" class="block text-sm font-medium text-gray-200 mb-1">النطاق الجغرافي <span class="text-red-500">*</span></label>
-                <input type="text" id="geoScope" required value="القاهرة - مصر" class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 input-dark-theme" placeholder="مثل: القاهرة - مصر">
+                <input type="text" id="geoScope" required value="القاهرة - مصر" class="w-full border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 input-dark-theme" placeholder="مثل: القاهرة - مصر">
             </div>
             <div>
                 <label for="services" class="block text-sm font-medium text-gray-200 mb-1">الخدمات/المنتجات <span class="text-red-500">*</span></label>
-                <input type="text" id="services" required class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 input-dark-theme">
+                <input type="text" id="services" required class="w-full border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 input-dark-theme">
             </div>
             <div>
                 <label for="targetClients" class="block text-sm font-medium text-gray-200 mb-1">العملاء المستهدفون <span class="text-red-500">*</span></label>
-                <input type="text" id="targetClients" required class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 input-dark-theme">
+                <input type="text" id="targetClients" required class="w-full border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 input-dark-theme">
             </div>
         </div>
 
@@ -140,7 +154,7 @@
             <div>
                 <label for="contentLanguage" class="block text-sm font-medium text-gray-200 mb-1">لغة المحتوى <span class="text-red-500">*</span></label>
                 <input type="text" id="contentLanguage" required 
-                       class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 input-dark-theme"
+                       class="w-full border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 input-dark-theme"
                        value="العربية (العامية المصرية)" 
                        placeholder="مثال: العربية (العامية المصرية)">
             </div>
@@ -149,7 +163,7 @@
             <div>
                 <label for="platform" class="block text-sm font-medium text-gray-200 mb-1">المنصة المستهدفة <span class="text-red-500">*</span></label>
                 <!-- تطبيق تنسيق الحقل الداكن -->
-                <select id="platform" required class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 appearance-none input-dark-theme">
+                <select id="platform" required class="w-full border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 appearance-none input-dark-theme">
                     <option value="">اختر المنصة</option>
                     <option value="Facebook">Facebook</option>
                     <!-- تحديد القيمة الافتراضية "Instagram" عبر خاصية selected -->
@@ -163,13 +177,13 @@
             <!-- حقل تاريخ النشر (سيتم تعيين قيمته بواسطة JS) -->
             <div>
                 <label for="publishDate" class="block text-sm font-medium text-gray-200 mb-1">تاريخ النشر <span class="text-red-500">*</span></label>
-                <input type="date" id="publishDate" required class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 input-dark-theme">
+                <input type="date" id="publishDate" required class="w-full border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 input-dark-theme">
             </div>
         </div>
         
         <div>
             <label for="contentType" class="block text-sm font-medium text-gray-200 mb-1">نوع المحتوى <span class="text-red-500">*</span></label>
-            <select id="contentType" required class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 appearance-none input-dark-theme">
+            <select id="contentType" required class="w-full border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 appearance-none input-dark-theme">
                 <option value="">اختر النوع</option>
                 <option value="نص">نص (كابشن/تغريدة)</option>
                 <option value="صورة">صورة (أو كاروسيل)</option>
@@ -180,17 +194,17 @@
 
         <div id="captionFieldContainer" class="hidden">
             <label for="captionText" class="block text-sm font-medium text-gray-200 mb-1">Caption المقترح (نص الصورة/الفيديو) <span class="text-red-500">*</span></label>
-            <textarea id="captionText" rows="4" class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 resize-y input-dark-theme" placeholder="النص الكامل للكابشن/التغريدة..."></textarea>
+            <textarea id="captionText" rows="4" class="w-full border border-gray-600 rounded-lg focus:ring-red-500 focus:border-red-500 transition duration-150 resize-y input-dark-theme" placeholder="النص الكامل للكابشن/التغريدة..."></textarea>
         </div>
 
         <div>
             <label for="contentDesc" class="block text-sm font-medium text-gray-200 mb-1" id="contentDescLabel">وصف المحتوى المرئي/السمعي أو الرابط <span class="text-red-500">*</span></label>
-            <textarea id="contentDesc" rows="5" required class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 resize-y input-dark-theme" placeholder="أدخل وصف دقيق للمحتوى المرئي أو الرابط هنا..."></textarea>
+            <textarea id="contentDesc" rows="5" required class="w-full border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 resize-y input-dark-theme" placeholder="أدخل وصف دقيق للمحتوى المرئي أو الرابط هنا..."></textarea>
         </div>
 
         <div>
             <label for="notes" class="block text-sm font-medium text-gray-200 mb-1">ملاحظات إضافية (اختياري)</label>
-            <textarea id="notes" rows="3" class="w-full px-4 py-3 border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 resize-y input-dark-theme" placeholder="أي توجيهات خاصة للمراجع..."></textarea>
+            <textarea id="notes" rows="3" class="w-full border border-gray-600 rounded-lg focus:ring-blue-500 focus:border-blue-500 transition duration-150 resize-y input-dark-theme" placeholder="أي توجيهات خاصة للمراجع..."></textarea>
         </div>
 
         <!-- منطقة الأزرار المعدلة -->
@@ -527,7 +541,7 @@ ${contentDetails}
     * **أقوى الكلمات:** تحديد **أقوى 7 كلمات مفتاحية (Long-Tail)** بأعلى معدل بحث/نقر (Search/Click Volume) في ${data.geoScope}، مع ذكر **متوسط حجم البحث الشهري الحالي (Average Monthly Search) بالرقم الدقيق** لكل منها في المنطقة.
     * **لغة البحث:** تحديد **النسبة المئوية (%)** للكلمات المفتاحية التي يبحث عنها الجمهور بلغة "${data.contentLanguage}" مقابل اللغات الأخرى في نفس المجال.
 3.  **تحليل الخوارزميات والمنصة (المعايير الرقمية التفصيلية):**
-    * **معدل التفاعل المستهدف:** تحديد **متوسط معدل التفاعل (Engagement Rate %) المستهدف** على "${data.platform}" لنشاط "${data.services}".
+    * **معدل التفاعل المستهدف:** تحديد **متوسط معدل التفاعل (Engagement Rate %) المستهدف** على "${data.platform}" لنشاط "${data.services}"
     * **أوقات النشر المثلى:** تحديد **أفضل 3 أوقات للنشر (بالساعة والتوقيت المحلي)** التي تحقق أعلى وصول (Reach) في المنطقة.
     * **الهاشتاجات:** تحديد **العدد الأمثل للهاشتاجات (بالرقم)** وتوزيعها (نسبة الهاشتاجات العالية/المتوسطة/المنخفضة التنافسية).
 4.  **التحليل الديموغرافي والنفسي (بالنسب الدقيقة):**
