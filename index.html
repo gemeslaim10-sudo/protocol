@@ -21,6 +21,8 @@
         body {
             background-color: #1a1a1a; /* Dark background for the app feel */
             min-height: 100vh;
+            /* إضافة هذه الخاصية لمنع شريط التمرير الأفقي غير المرغوب فيه */
+            overflow-x: hidden; 
         }
         
         /* 2. الألوان الأساسية للنصوص على المستوى العام */
@@ -90,7 +92,8 @@
 
 
 <!-- تغيير الخلفية والحواف إلى الداكن -->
-<div class="w-full max-w-3xl bg-gray-800 shadow-2xl rounded-xl p-6 sm:p-10 border-t-8 border-red-500 app-container">
+<!-- تقليل padding الافتراضي لـ p-6 إلى p-4 على الشاشات الصغيرة لزيادة المساحة المتاحة -->
+<div class="w-full max-w-3xl bg-gray-800 shadow-2xl rounded-xl p-4 sm:p-10 border-t-8 border-red-500 app-container">
     <!-- العنوان باللون الأحمر -->
     <h1 class="text-2xl sm:text-3xl font-extrabold text-red-500 text-center mb-8 sm:mt-0 mt-4 hidden sm:block">نظام مراجعة محتوى Art Vision</h1>
     <!-- النص باللون الأبيض/الفاتح -->
